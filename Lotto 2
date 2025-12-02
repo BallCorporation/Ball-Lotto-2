@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ball Corporation – Máquina de Sorteio</title>
+
+<style>
+:root {
+  --ball-blue: #1154ff;
+  --ball-blue-dark: #0038a8;
+  --ball-blue-light: #4f8dff;
+  --can-silver: #e5e7eb;
+  --can-silver-dark: #9ca3af;
+  --white: #ffffff;
+}
+
+/* FULL SCREEN */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #000814;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  height: 100vh;
+}
+
+/* CARD CENTRAL */
+.card {
+  background: #0f172a;
+  border-radius: 20px;
+  padding: 24px;
+  width: 100%;
+  max-width: 820px;
+  border: 1px solid #2a3b5f;
+  box-sizing: border-box;
+}
+
+/* HEADER */
+.header {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.header img {
+  height: 55px;
+}
+
+.header h2 {
+  margin: 0;
+}
+
+/* FORMULÁRIO */
+form {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.field-group label {
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+.field label {
+  color: #9ca3af;
+  font-size: 0.75rem;
+}
+
+input[type="number"] {
+  padding: 7px;
+  border-radius: 8px;
+  border: 1px solid #3b4f71;
+  background: #1e293b;
+  color: white;
+}
+
+/* BOTÕES */
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-primary {
+  background: #1140ff;
+  color: white;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.08);
+}
+
+.btn-secondary {
+  background: #1e293b;
+  border: 1px solid #475569;
+  color: white;
+}
+
+/* ÁREA DO SORTEIO */
+#drum {
+  margin-top: 20px;
+  padding: 20px;
+  background: #001226;
+  border-radius: 12px;
+  min-height: 190px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ---------------- LATINHA "REALISTA" (RESULTADO) ---------------- */
+
+.final-can {
+  position: relative;
+  width: 80px;
+  height: 130px;
+  border-radius: 26px;
+  margin: 6px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--white);
+  font-weight: bold;
+  font-size: 1.4rem;
+  box-shadow: 0 12px 25px rgba(0,0,0,0.55);
+  animation: pop 0.4s ease-out forwards;
+
+  /* corpo azul + textura de gotinhas */
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.28) 0, rgba(255,255,255,0.1) 20%, transparent 40%),
+    radial-gradient(circle at 60% 35%, rgba(255,255,255,0.35) 0, rgba(255,255,255,0.1) 22%, transparent 45%),
+    radial-gradient(circle at 40% 70%, rgba(255,255,255,0.25) 0, rgba(255,255,255,0.08) 22%, transparent 45%),
+    radial-gradient(circle at 70% 80%, rgba(255,255,255,0.3) 0, rgba(255,255,255,0.1) 20%, transparent 45%),
+    linear-gradient(90deg, #00308f 0%, #0f4fdc 40%, #4f8dff 60%, #0f4fdc 85%, #002f83 100%);
+  background-blend-mode: screen, screen, screen, screen, normal;
+}
+
+/* topo + base prateadas */
+.final-can::before,
+.final-can::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  height: 14px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 50% 0,
+      var(--white) 0,
+      var(--can-silver) 40%,
+      var(--can-silver-dark) 70%,
+      #4b5563 100%);
+}
+
+/* topo */
+.final-can::before {
+  top: -7px;
+  box-shadow: 0 4px 4px rgba(0,0,0,0.45);
+}
+
+/* base */
+.final-can::after {
+  bottom: -7px;
+  box-shadow: 0 -4px 4px rgba(0,0,0,0.5);
+}
+
+/* reflexo lateral */
+.final-can span.can-highlight {
+  pointer-events: none;
+  position: absolute;
+  top: 18px;
+  bottom: 20px;
+  right: 10px;
+  width: 10px;
+  border-radius: 999px;
+  background: linear-gradient(180deg,
+      rgba(255,255,255,0.4),
+      rgba(255,255,255,0.15),
+      rgba(255,255,255,0.35));
+  opacity: 0.9;
+}
+
+/* ---------------- LATINHA DA ANIMAÇÃO (SPIN) ---------------- */
+
+.spin-can {
+  position: absolute;
+  width: 60px;
+  height: 110px;
+  border-radius: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--white);
+  font-weight: bold;
+  font-size: 0.95rem;
+  opacity: 0;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.6);
+  animation: spinAnim 0.3s linear forwards;
+
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.22) 0, rgba(255,255,255,0.05) 22%, transparent 40%),
+    radial-gradient(circle at 60% 40%, rgba(255,255,255,0.25) 0, rgba(255,255,255,0.06) 22%, transparent 45%),
+    radial-gradient(circle at 40% 70%, rgba(255,255,255,0.2) 0, rgba(255,255,255,0.06) 22%, transparent 45%),
+    linear-gradient(90deg, #002b80 0%, #1552e0 40%, #4f8dff 60%, #1144ce 85%, #002866 100%);
+  background-blend-mode: screen, screen, screen, normal;
+}
+
+/* topo e base da latinha animada */
+.spin-can::before,
+.spin-can::after {
+  content: "";
+  position: absolute;
+  left: 7px;
+  right: 7px;
+  height: 11px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 50% 0,
+      var(--white) 0,
+      var(--can-silver) 40%,
+      var(--can-silver-dark) 70%,
+      #4b5563 100%);
+}
+
+/* topo */
+.spin-can::before {
+  top: -6px;
+}
+
+/* base */
+.spin-can::after {
+  bottom: -6px;
+}
+
+/* reflexo lateral da animada */
+.spin-can span.can-highlight {
+  pointer-events: none;
+  position: absolute;
+  top: 16px;
+  bottom: 18px;
+  right: 9px;
+  width: 8px;
+  border-radius: 999px;
+  background: linear-gradient(180deg,
+      rgba(255,255,255,0.35),
+      rgba(255,255,255,0.1),
+      rgba(255,255,255,0.28));
+}
+
+/* ANIMAÇÕES GERAIS */
+@keyframes pop {
+  from { transform: scale(0.1); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+@keyframes spinAnim {
+  0%   { opacity: 0; transform: scale(0.3) rotate(0deg); }
+  50%  { opacity: 1; transform: scale(1.1) rotate(180deg); }
+  100% { opacity: 0; transform: scale(0.3) rotate(360deg); }
+}
+
+@keyframes shakeAnim {
+  0%   { transform: translate(0,0); }
+  25%  { transform: translate(5px,-5px); }
+  50%  { transform: translate(-5px,5px); }
+  75%  { transform: translate(5px,5px); }
+  100% { transform: translate(0,0); }
+}
+
+.shake {
+  animation: shakeAnim 0.13s infinite;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <div class="header">
+    <img src="ball-logo.png" alt="Ball Corporation">
+    <h2>Máquina de Sorteio</h2>
+  </div>
+
+  <form id="config-form">
+    <!-- INTERVALO -->
+    <div class="field-group" style="grid-column:span 4;">
+      <label>Intervalo de:</label>
+    </div>
+
+    <div class="field">
+      <label for="min">De</label>
+      <input id="min" type="number" min="1" max="100" value="1">
+    </div>
+
+    <div class="field">
+      <label for="max">Até</label>
+      <input id="max" type="number" min="1" max="100" value="100">
+    </div>
+
+    <!-- BOLAS/LATAS SORTEADAS -->
+    <div class="field-group" style="grid-column:span 4;margin-top:10px;">
+      <label>Bolas sorteadas:</label>
+    </div>
+
+    <div class="field">
+      <input id="qtd" type="number" min="1" max="10" value="1">
+    </div>
+
+    <!-- ANIMAÇÃO -->
+    <div class="field-group" style="grid-column:span 4;margin-top:10px;">
+      <label>Animação:</label>
+    </div>
+
+    <div class="field">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <input id="duracao" type="number" min="1" max="15" value="3">
+        <span id="duracao-unidade" style="font-size:0.8rem; color:#e5e7eb;">segundos</span>
+      </div>
+    </div>
+  </form>
+
+  <div class="actions">
+    <button class="btn-primary" id="btn-sortear" type="button">Sortear</button>
+    <button class="btn-secondary" id="btn-limpar" type="button">Limpar</button>
+  </div>
+
+  <div id="drum"></div>
+</div>
+
+<script>
+// Atalhos
+function $(id){ return document.getElementById(id); }
+function random(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+// ÁUDIO – som de tambor com Web Audio
+let audioCtx = null;
+function playDrumHit(){
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+
+    gain.gain.setValueAtTime(0.8, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.25);
+  } catch(e){
+    // se não conseguir tocar som (bloqueio do navegador), só ignora
+  }
+}
+
+// "segundo" / "segundos"
+const duracaoInput = $("duracao");
+const duracaoUnidade = $("duracao-unidade");
+
+function atualizarUnidade(){
+  const v = parseInt(duracaoInput.value,10);
+  duracaoUnidade.textContent = v === 1 ? "segundo" : "segundos";
+}
+duracaoInput.addEventListener("input", atualizarUnidade);
+atualizarUnidade();
+
+// animação com latinhas + tremida + som
+function animateSpinShake(duration){
+  const drum = $("drum");
+  drum.innerHTML = "";
+  drum.classList.add("shake");
+
+  const interval = setInterval(()=>{
+    const c = document.createElement("div");
+    c.className = "spin-can";
+
+    const w = drum.clientWidth  || 300;
+    const h = drum.clientHeight || 190;
+
+    c.style.left = random(10, w-70) + "px";
+    c.style.top  = random(5,  h-110) + "px";
+
+    c.textContent = random(1,99);
+
+    const hi = document.createElement("span");
+    hi.className = "can-highlight";
+    c.appendChild(hi);
+
+    drum.appendChild(c);
+    playDrumHit();
+
+    setTimeout(()=> c.remove(), 260);
+  }, 80);
+
+  return new Promise(resolve=>{
+    setTimeout(()=>{
+      clearInterval(interval);
+      drum.classList.remove("shake");
+      drum.innerHTML = "";
+      resolve();
+    }, duration * 1000);
+  });
+}
+
+// clique em Sortear
+$("btn-sortear").onclick = async () => {
+  const min = parseInt($("min").value,10);
+  const max = parseInt($("max").value,10);
+  const qtd = parseInt($("qtd").value,10);
+  const dur = parseInt(duracaoInput.value,10);
+
+  if (isNaN(min) || isNaN(max) || isNaN(qtd) || isNaN(dur)) {
+    alert("Preencha todos os campos corretamente.");
+    return;
+  }
+  if (min >= max) {
+    alert("O valor mínimo deve ser menor que o valor máximo.");
+    return;
+  }
+  if (qtd < 1 || qtd > 10) {
+    alert("A quantidade de bolas deve ser entre 1 e 10.");
+    return;
+  }
+  if (dur < 1 || dur > 15) {
+    alert("A duração da animação deve ser entre 1 e 15 segundos.");
+    return;
+  }
+  if ((max - min + 1) < qtd) {
+    alert("O intervalo é menor que a quantidade de bolas.");
+    return;
+  }
+
+  await animateSpinShake(dur);
+
+  const usados = new Set();
+  const nums = [];
+  while (nums.length < qtd) {
+    const n = random(min,max);
+    if (!usados.has(n)) {
+      usados.add(n);
+      nums.push(n);
+    }
+  }
+  nums.sort((a,b)=>a-b);
+
+  const drum = $("drum");
+  nums.forEach(n=>{
+    const can = document.createElement("div");
+    can.className = "final-can";
+    can.textContent = n;
+
+    const hi = document.createElement("span");
+    hi.className = "can-highlight";
+    can.appendChild(hi);
+
+    drum.appendChild(can);
+  });
+};
+
+// clique em Limpar
+$("btn-limpar").onclick = () => {
+  $("drum").innerHTML = "";
+};
+</script>
+
+</body>
+</html>
